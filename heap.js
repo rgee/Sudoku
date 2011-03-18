@@ -2,7 +2,7 @@
    some sort of score value for the elements stored. Return a positive value
    for a min heap and a negative value for a max heap. */
 function BinHeap(scoreFunc){
-	this.data = new Array();
+	this.data = [];
 	this.scorer = scoreFunc;
 }
 

@@ -1,7 +1,50 @@
+body{
+	background: #3053A6;
+}
 #content{
-	text-align: center;
+	margin: 0 auto;
+	width: 900px;
+	font-family: 'helvetica';
 } 
+#header{
+	font-size: 10px;
+	text-align: center;
+	color: #DAE2F5;
+}
+#errors{
+	text-align: center;
+	margin: 0px 0px 5px 0px;
+}
+
+#errortext{
+	visibility: hidden;
+	background: #FFC4C5;
+	text-align:center;
+	font-size: 11px;
+	border: 1px solid #FC2D31;
+	padding: 1px 5px;
+}
+
+#display{
+	border: 1px solid black;
+	float: left;
+	width: 400px;
+	height: 300px;
+}
+
+#menu{
+	clear:both;
+	padding: 20px 60% 0% 40%;
+}
+
+#menu button {
+	font-size: 20px;
+	width: 150px;
+	height: 50px;
+}
 
 .terminal{
-	margin-left: 300px;
+	background: blue;
+	float: right;
+	border: 1px solid black;
 }

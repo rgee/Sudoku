@@ -47,7 +47,8 @@ Solver.prototype = {
 
 function Board(){
 	this.data = new Array(9);
-
+	this.ready = false;
+	
 	for(var i = 0; i < 9; i++){
 		this.data[i] = new Array(9);
 		for(var j = 0; j < 9; j++){
@@ -60,12 +61,24 @@ function Board(){
 Board.prototype = {
 	fillSquare : function(row, col, val) {
 		this.data[row][col] = val;
+		if(!this.ready){
+			this.ready = true;
+		}
 	}
 };
 
 /* Performs all solver actions for one solver iteration. */
 function update(){
 
+}
+
+function displayError(text){
+	var errorDiv = $('#errors');
+	var result = $('#errortext')
+					.html(text)
+					.css({"visibility":"visible"})
+					.appendTo(errorDiv);
+	
 }
 
 function draw(proc){
@@ -87,6 +100,7 @@ function draw(proc){
 				solver.processSubSquares();
 			}
 			this.keyboardMode = false;
+				
 		}
 		
 	};
@@ -102,9 +116,8 @@ function draw(proc){
 	};
 	
 	proc.drawText = function() {
-		context.font = 'italic 30px sans-serif';
+		context.font = 'italic 15px sans-serif';
 		context.fillStyle = '#000';
-		context.textBaseline = 'top';
 	
 		for(var x = 0; x < 9; x++){
 			for(var y = 0; y < 9; y++){
@@ -134,22 +147,42 @@ function draw(proc){
 		
 	};
 }
+var solve = (function(){
+	var i = 0;
+	return function(){
+		i = i +1;
+		term.put("Solver iteration: " + i);
+	};
+})();
+
+function startSolve(){
+	if(gameBoard.ready){
+		setInterval(function(){
+			solve();
+		}, 1000);
+	}else{
+		displayError("Game board not initialized. Enter at least one number.");
+	}
+}
 
 /* Globals. Ohnoes. */
 var gameBoard = new Board();
-var term = new Object();
-var context = new Object();
+var term = {};
+var context = {};
 var solver = new Solver();
 
+
 jQuery(document).ready(function(){
-	term = new Terminal('.terminal', 800, 300);
+	term = new Terminal('.terminal', 450, 300);
 	$('.terminal').click(function(){ term.put('(right <= length && this.scorer(this.data[right]) > this.scorer(this.data[largest))'); });
+	$('#start').click(startSolve);
 	
 	term.put(gameBoard.data);
 	
 	var procInstance = new Processing(document.getElementById('board'), draw);
-	procInstance.size(800,600);
+	procInstance.size(400,300);
 	context = document.getElementById('board').getContext('2d');
+	
 	
 	solver.processSubSquares();
 }); 
