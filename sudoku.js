@@ -119,7 +119,6 @@ function startSolve(){
 				}
 			}
 		}
-		console.log(this.data);
 	}
 
 	Board.prototype = {
@@ -141,48 +140,86 @@ function startSolve(){
 
 (function(global){
 	function Solver(board){
-		/* Binary max heap of sub-square objects. Sub-squares have an index
-		   representing their position on the board and an array of their filled
-		   numbers. The scoring function for the heap is the length of this array.
-
-		   The idea is that I always look for the most complete subsquares
-		   first when trying to find trivial solutions like a subsquare with 8 cells
-		   filled.
-		*/
-		this.subSquareHeap = new BinHeap(function(u){return u.data.length;});
+		this.subSquares = [];
+		this.board = board;
+		this.internalRepr = [];
+		this.processSubSquares();
 	}
 
 	Solver.prototype = {
 		/* Run through all knowledge-refinement and square-filling tactics once. */
 		solve: function(){
 		},
+		/* Divides the grid into the 3x3 units for constraint testing and stores them in
+		   a linear array in row-major order. Each element of subSquares itself is a 2d
+		   array representing the subSquare in row-major order. */
 		processSubSquares: function(){
-			this.subSquareHeap.clear();
+			this.subSquares = [];
 			var row = 0;
-			for(var col = 0; col < 3; col++){
-				for(var row = 0; row < 3; row++){
+			for(var col = 0; col < 9; col+=3){
+				for(var row = 0; row < 9; row+=3){
 					var data = new Array();
 					for(var x = 0; x < 3; ++x){
 						for(var y = 0; y < 3; ++y){
-							var current = gameBoard.data[(row*3) + y][(col*3) + x];
-							if(current) {
-								data.push(current);
-							}
+							data.push(this.board.data[col + x][row + y]);
 						}
 					}
-					var subObj = {'idx' : [col,row],
-								  'data' : data};
-					this.subSquareHeap.push(subObj);
+					this.subSquares.push(data);
 				}
 				
 			}
-			console.log(this.subSquareHeap);
 		},
 		/* Fill in a square on the grid and update internal representations */
 		fillSquare : function(row, col, val){
 			this.processSubSquares();
+			this.internalRepr[row][col] = [];
+		},
+		/* Helper function to do row-major math on the subSquare grid */
+		subSquareIdx : function(row,col){
+			return (Math.floor(row/3)*3 + Math.floor(col/3));
+		},
+		/* Calculate the potential numbers for each grid square, thus creating the solver's internal
+		   representation of the sudoku board. Creates a 3d array of potential numbers from 1-9.
+		 */ 
+		calculatePotentials : function(){
+			var all = [1,2,3,4,5,6,7,8,9];
+
+			this.internalRepr = new Array(9);
+			for(var row = 0; row < 9; row++){
+				this.internalRepr[row] = new Array(9);
+				for(var col = 0; col < 9; col++){
+					// Calculate possible numbers based on row/col/subsquare constraints if not given.
+					if(!this.board.data[row][col]){
+						 var subSquareIdx = this.subSquareIdx(row,col);
+						 var possibilities = all.slice(0);
+						 for(var i = 0; i < all.length; i++){
+						 	var result = true;
+					 		if(this.board.data[row].indexOf(all[i]) !== -1){
+					 			result = false;
+					 		}
+					 		for(var j = 0; j < 9; j++){
+					 			if(this.board.data[j][col] === all[i]){
+					 				result = false;
+					 				break;
+					 			}
+					 		}
+
+					 		if(this.subSquares[subSquareIdx].indexOf(all[i]) !== -1 ){
+					 			result = false;
+					 		}
+					 		if(!result){
+					 			possibilities.splice(possibilities.indexOf(all[i]),1);
+					 		}
+						 }
+						 this.internalRepr[row][col] = possibilities;
+					} else {
+						this.internalRepr[row][col] = [];
+					}
+				}
+			}
 		}
 	};
+	
 	var solver = function(board){
 		return new Solver(board);
 	}
@@ -193,10 +230,73 @@ function startSolve(){
 /* Globals */
 var term = {};
 var context = {};
-var solver = new Solver();
+var solver = {};
 var gameBoard = {};
 
+
+function setupWorkarounds(){
+	
+	if (!Array.prototype.map)
+	{
+	  Array.prototype.map = function(fun /*, thisp */)
+	  {
+	    "use strict";
+
+	    if (this === void 0 || this === null)
+	      throw new TypeError();
+
+	    var t = Object(this);
+	    var len = t.length >>> 0;
+	    if (typeof fun !== "function")
+	      throw new TypeError();
+
+	    var res = new Array(len);
+	    var thisp = arguments[1];
+	    for (var i = 0; i < len; i++)
+	    {
+	      if (i in t)
+	        res[i] = fun.call(thisp, t[i], i, t);
+	    }
+
+	    return res;
+	  };
+	}
+
+	if (!Array.prototype.filter)
+	{
+	  Array.prototype.filter = function(fun /*, thisp */)
+	  {
+	    "use strict";
+
+	    if (this === void 0 || this === null)
+	      throw new TypeError();
+
+	    var t = Object(this);
+	    var len = t.length >>> 0;
+	    if (typeof fun !== "function")
+	      throw new TypeError();
+
+	    var res = [];
+	    var thisp = arguments[1];
+	    for (var i = 0; i < len; i++)
+	    {
+	      if (i in t)
+	      {
+	        var val = t[i]; // in case fun mutates this
+	        if (fun.call(thisp, val, i, t))
+	          res.push(val);
+	      }
+	    }
+
+	    return res;
+	  };
+	}
+}
 jQuery(document).ready(function(){
+	setupWorkarounds();
+
+
+
 	term = new Terminal('.terminal', 450, 385);
 	$('.terminal').click(function(){ term.put('(right <= length && this.scorer(this.data[right]) > this.scorer(this.data[largest))'); });
 	$('#start').click(startSolve);
@@ -207,6 +307,6 @@ jQuery(document).ready(function(){
 	procInstance.size(400,400);
 	context = document.getElementById('board').getContext('2d');
 	
-	
-	solver.processSubSquares();
+	solver = Solver(gameBoard);
+	solver.calculatePotentials();
 }); 
