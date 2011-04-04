@@ -224,16 +224,24 @@ function startSolve(){
 			}
 		},
 		eliminatePairs: function(){
-			var elem = temp = other = removed = null;
+			this.eliminateGroups(2);	
+		},
+		eliminateTriples: function(){
+			this.eliminateGroups(3);	
+		},
+		eliminateGroups: function(length){
 
+			var elem = temp = removed = numMatches = null;
+			numMatches = 0;
 			for(var row = 0; row < 9; row++){
 				for(var col = 0; col < 9; col++){
 					elem = this.internalRepr[row][col].slice(0);
-					if(elem.length === 2){
+					if(elem.length === length){
+						/* ****ROW CONSTRAINTS**** */
 						// Make a copy of the array to mutate.
 						temp = this.internalRepr[row].slice(0);
 
-						// Check if it's identical to any other pairs after removing it from the array.
+						// Check if it's identical to any other pairs in the row after removing it from the array.
 						removed = false;
 						temp = temp.filter(function(element, index, array){
 							if(elem.compareArrays(element) && !removed){
@@ -245,33 +253,61 @@ function startSolve(){
 							}
 						});
 						
-						// Does another of this type exist?
+						// Does enough of these exist in the row?
 						other = false;
 						$.each(temp, function(index, val){
 							if(elem.compareArrays(val)){
-								other = true;
-								return false;
+								numMatches++;
 							}
 						});
-						if(other){
+						if(numMatches === length-1){
+							numMatches = 0;
 							// Remove every instance of the pair from all its supersets in the row.
 							this.internalRepr[row] = $.map(this.internalRepr[row], function(element, index){
 								if(elem.compareArrays(element)){
 									return [element];
 								} else {
 									var t= element.filter(function(e, i, a){
-										return !(e === elem[0] || e === elem[1]);
+										var result = true;
+										for(var i = 0; i < elem.length; i++){
+											if(elem[i] === e){
+												result = false;
+												break;
+											}
+										}
+										return result;
 									});
 									return [t];
 								}
 							});
 						}
+
+						/* ****COLUMN CONSTRAINTS**** */
+						for(var i = 0; i < 9; i++){
+							if(elem.compareArrays(this.internalRepr[i][col]) && i !== row){
+								numMatches++;
+							}
+						}
+
+						if(numMatches === length-1){
+							for(var i = 0; i < 9; i++){
+								if(!elem.compareArrays(this.internalRepr[i][col])){
+									this.internalRepr[i][col] = this.internalRepr[i][col].filter(function(e, idx, arr){
+										var result = true;
+										for(var i = 0; i < elem.length; i++){
+											if(elem[i] === e){
+												result = false;
+												break;
+											}
+										}
+										return result;
+									});
+								}
+							}
+						}
 					}
 				} 
 			}
-		},
-		eliminateTriples: function(){
-			
 		}
 	};
 
@@ -374,13 +410,15 @@ jQuery(document).ready(function(){
 	term = new Terminal('.terminal', 450, 385);
 	$('.terminal').click(function(){ term.put('(right <= length && this.scorer(this.data[right]) > this.scorer(this.data[largest))'); });
 	$('#start').click(startSolve);
-	gameBoard = GameBoard(true)
-	term.put(gameBoard.data);
-	
+		term.put(gameBoard.data);
+
+
+
 	var procInstance = new Processing(document.getElementById('board'), draw);
 	procInstance.size(400,400);
 	context = document.getElementById('board').getContext('2d');
-	
+
+	gameBoard = GameBoard(true)
 	solver = Solver(gameBoard);
 }); 
 

@@ -143,14 +143,16 @@
 		eliminatePairs: function(){
 			var elem = temp = other = removed = null;
 
+
 			for(var row = 0; row < 9; row++){
 				for(var col = 0; col < 9; col++){
 					elem = this.internalRepr[row][col].slice(0);
 					if(elem.length === 2){
+						/* ****ROW CONSTRAINTS**** */
 						// Make a copy of the array to mutate.
 						temp = this.internalRepr[row].slice(0);
 
-						// Check if it's identical to any other pairs after removing it from the array.
+						// Check if it's identical to any other pairs in the row after removing it from the array.
 						removed = false;
 						temp = temp.filter(function(element, index, array){
 							if(elem.compareArrays(element) && !removed){
@@ -182,6 +184,25 @@
 									return [t];
 								}
 							});
+						}
+
+						/* ****COLUMN CONSTRAINTS**** */
+						other = false;
+						for(var i = 0; i < 9; i++){
+							if(elem.compareArrays(this.internalRepr[i][col]) && i !== row){
+								other = true;
+								break;
+							}
+						}
+
+						if(other){
+							for(var i = 0; i < 9; i++){
+								if(!elem.compareArrays(this.internalRepr[i][col])){
+									this.internalRepr[i][col] = this.internalRepr[i][col].filter(function(e, idx, arr){
+										return !(e === elem[0] || e === elem[1]);
+									});
+								}
+							}
 						}
 					}
 				} 
