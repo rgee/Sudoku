@@ -224,46 +224,24 @@ function startSolve(){
 			}
 		},
 		eliminatePairs: function(){
-			var elem = temp = other = removed = null;
-
+			var elem = temp = other = null;
 			for(var row = 0; row < 9; row++){
 				for(var col = 0; col < 9; col++){
 					elem = this.internalRepr[row][col].slice(0);
 					if(elem.length === 2){
-						// Make a copy of the array to mutate.
 						temp = this.internalRepr[row].slice(0);
-
 						// Check if it's identical to any other pairs after removing it from the array.
-						removed = false;
-						temp = temp.filter(function(element, index, array){
-							if(elem.compareArrays(element) && !removed){
-								removed = true;
-								return false;
-							} else {
-								
-								return true;
-							}
-						});
-						
-						// Does another of this type exist?
-						other = false;
-						$.each(temp, function(index, val){
-							if(elem.compareArrays(val)){
-								other = true;
-								return false;
-							}
-						});
-						if(other){
+						other = temp.splice(temp.indexOf(elem),1).indexOf(elem);
+						if(other !== -1){
 							// Remove every instance of the pair from all its supersets in the row.
-							this.internalRepr[row] = $.map(this.internalRepr[row], function(element, index){
-								if(elem.compareArrays(element)){
-									return [element];
-								} else {
-									var t= element.filter(function(e, i, a){
-										return !(e === elem[0] || e === elem[1]);
-									});
-									return [t];
-								}
+							$.map(this.internalRepr[row], function(element, index){
+								return $.map(element, function(e, i){
+									for(var k = 0; k < 2; k++){
+										if(e === elem[k]){
+											return null;
+										}
+									}
+								});
 							});
 						}
 					}
@@ -296,7 +274,8 @@ var gameBoard = {};
  */
 function setupWorkarounds(){
 	
-	if (!Array.prototype.map){
+	if (!Array.prototype.map)
+	{
 	  Array.prototype.map = function(fun /*, thisp */)
 	  {
 	    "use strict";
@@ -321,7 +300,8 @@ function setupWorkarounds(){
 	  };
 	}
 
-	if (!Array.prototype.filter){
+	if (!Array.prototype.filter)
+	{
 	  Array.prototype.filter = function(fun /*, thisp */)
 	  {
 	    "use strict";
@@ -349,21 +329,42 @@ function setupWorkarounds(){
 	    return res;
 	  };
 	}
-
-	if(!Array.prototype.compareArrays) {
-		Array.prototype.compareArrays = function(arr) {
-		    if (this.length != arr.length) return false;
-		    for (var i = 0; i < arr.length; i++) {
-		        if (this[i].compareArrays) { //likely nested array
-		            if (!this[i].compareArrays(arr[i])) return false;
-		            else continue;
-		        }
-		        if (this[i] != arr[i]) return false;
-		    }
-		    return true;
-		};
-	}
 }
+
+Context("sudoku solving",
+	setup(function(){
+		var slv = Solver(GameBoard());
+	}),
+	Context("finding pairs",
+		setup(function(){
+			slv.internalRepr = [[[2,3],[2,3],[2,3,7],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]],
+								[[],[],[],[],[],[],[],[],[]]];
+			var target = [[[2,3],[2,3],[7],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]],
+							[[],[],[],[],[],[],[],[],[]]];
+		}),
+		should("remove pairs from the potential lists if they exist", function(){
+			slv.eliminatePairs();
+			console.log(slv.internalRepr);
+			assert.equal(slv.internalRepr, target);
+		})
+
+	)
+);
+Tests.run();
 
 jQuery(document).ready(function(){
 
