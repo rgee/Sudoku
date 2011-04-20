@@ -3,8 +3,8 @@ class Solver
     constructor: (@board) ->
         @subSquares = []
         @internalRepr = new Array(9)        
-        this.processSubSquares()
-        this.calculatePotentials()
+        @processSubSquares()
+        @calculatePotentials()
 
     processSubSquares: () ->
         @subSquares = []
@@ -70,3 +70,5 @@ class Solver
 
     eliminateTrples: () ->
         eliminateGroups(3)
+
+    

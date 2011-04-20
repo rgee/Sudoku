@@ -3,7 +3,7 @@ sys = require 'sys'
 {exec} = require 'child_process'
 
 appFiles = [
-    'board', 'solver'
+    'board', 'solver', 'main'
 ]
 
 task 'build', 'Build a single javascript file from our various coffeescript files', ->
