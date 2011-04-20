@@ -9,7 +9,7 @@
 	Solver.prototype = {
 		/* Run through all knowledge-refinement and square-filling tactics once. */
 		solve: function(){
-
+			
 		},
 
 		/* Divides the grid into the 3x3 units for constraint testing and stores them in
@@ -31,20 +31,32 @@
 				
 			}
 		},
-
-		/* Fill in a square on the grid and update internal representations */
+		/**
+		 * Analyze both the internal state and previous state and generate a summary of changes
+		 * in the form of an array of strings, each representing a single change.
+		 */
+		summarizeChanges : function(){
+			
+		},
+		/**
+		 * Fill in a square on the grid and update internal representations 
+		 */
 		fillSquare : function(row, col, val){
+			this.board.fillSquare(row, col, val);
 			this.processSubSquares();
-			this.internalRepr[row][col] = [];
+			this.calculatePotentials();
 		},
 
-		/* Helper function to do row-major math on the subSquare grid */
+		/**
+		 * Helper function to do row-major math on the subSquare grid 
+		 */
 		subSquareIdx : function(row,col){
 			return (Math.floor(row/3)*3 + Math.floor(col/3));
 		},
 
-		/* Calculate the potential numbers for each grid square, thus creating the solver's internal
-		   representation of the sudoku board. Creates a 3d array of potential numbers from 1-9.
+		/**
+		 * Calculate the potential numbers for each grid square, thus creating the solver's internal
+		 * representation of the sudoku board. Creates a 3d array of potential numbers from 1-9.
 		 */ 
 		calculatePotentials : function(){
 			var all = [1,2,3,4,5,6,7,8,9];
@@ -82,6 +94,23 @@
 					}
 				}
 			}
+		},
+		/**
+		 * If a number is only a candidate in one row or column of a 3x3 subsquare, we can remove it as a candidate
+		 * from all cells in that particular row or column. It must appear in that particular subsquare or else
+		 * that subsquare would have no other way of filling the number.
+		 */
+		onlyCandidate: function(){
+				
+		},
+		/**
+		 * Taking each group of three columns or rows (non-overlapping), if a number appears in two of the three subsquares
+		 * the group covers, then we know what row or column that number must appear in within the final subsquare that does
+		 * not have it. Using that, we see if the row or column, within the subgroup without that number only has one square
+		 * left unfilled. If so, fill it with that number because we know it could go nowhere else.
+		 */
+		allButOne: function(){
+			
 		},
 		eliminatePairs: function(){
 			this.eliminateGroups(2);	
