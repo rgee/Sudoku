@@ -76,7 +76,7 @@ $(document).ready(function(){
     }
 
 
-    function startSolve(){
+    function startSolve(solver){
         var solve = (function(){
             var i = 0;
             return function(){
@@ -87,7 +87,7 @@ $(document).ready(function(){
 
         if(gameBoard.ready){
             setInterval(function(){
-                solve();
+                solver.solve();
             }, 1000);
         }else{
             displayError("Game board not initialized. Enter at least one number.");
@@ -104,4 +104,5 @@ $(document).ready(function(){
     procInstance = new Processing(document.getElementById('board'), draw);
     procInstance.size(400,400);
     context = document.getElementById('board').getContext('2d');
+    $("#start").click(function(){startSolve(solver);});
 });
