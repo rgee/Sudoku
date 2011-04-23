@@ -38,9 +38,10 @@
 		solve: function(){
 			this.processSubSquares();
 			this.calculatePotentials();
-
+			this.allButOne();
 			this.eliminatePairs();
 			this.eliminateTriples();
+
 			this.takeOpportunities();
 		},
 
@@ -186,47 +187,60 @@
 		 // left unfilled. If so, fill it with that number because we know it could go nowhere else.
 		allButOne: function(){
 			var all = [1,2,3,4,5,6,7,8,9];
-			all.forEach(function(val){
-				// Check rows of subSquares.
-				for(var startIdx = 0, endIdx = 3; endIdx < 9; startIdx +=3, endIdx += 3){
-					// The current group of subsquares we're comparing
-					var workingSet = this.subSquares.slice(startIdx, endIdx),
-					// Map the subSquares to the positions of the given number, -1 if not there.
-					occupancy = workingSet.map(function(elem){
-						var idx = elem.indexOf(val);
-						return idx;
-					}),
-					// Count how many subSquares have the given number already placed.
-					howMany = occupancy.reduce(function(prev, curr){
-						return prev + (curr === -1 ? 0 : 1);
+
+			all.forEach(function(value){
+				for(var rowsStart = 0, rowsEnd = 3; rowsEnd < 9; rowsEnd += 3, rowsStart +=3){
+					var rowGroup = [this.board.data[rowsStart],
+							        this.board.data[rowsStart + 1],
+							        this.board.data[rowsStart + 2]],
+					// Map the three rows to an array of pairs representing the coordinates
+					// of the given element in the board.
+					coords = rowGroup.map(function(elem, index){
+						var	row = rowsStart + index,
+							col = elem.indexOf(value);
+
+						return [row, col];
 					});
+					
+					// Only continue if exactly one row did not have the given number assigned.
+					if(coords.filter(function(e){
+						return (e[1] === -1);
+					}).length === 1) {
 
-					// If we can determine the given number can only fit in one of the three rows.
-					if(howMany === 2){
-						// The subSquare missing the current number.
-						var subSquareToFill = this.subSquares[occupancy.indexOf(-1)];
+						// Grab the coordinate of the row without the value in it.
+						var definiteRowCoord = coords.filter(function(e){
+							return (e[1] === -1);
+						}).map(function(e){
+							return e[0];
+						});
 
-						// If there's only one empty square in this subSquare.
-						if(subSquareToFill.filter(function(elem){
-								return elem === 0;
-							}).length === 1){
-							var	rows = occupancy.map(function(elem){
-									return this.inverseSubSquareIdx(elem)[0];
-								},this),
-								// Deduce which row doesn't have the number placed.
-								placementRow = [startIdx, startIdx + 1, startIdx +2].filter(function(elem){
-									return (rows.indexOf(elem) === -1);
-								}),
-								// Deduce which column is the empty one in the target subSquare.
-								placementCol = this.inverseSubSquareIdx(this.subSquares.indexOf(subSquareToFill) + subSquareToFill.indexOf(0))[1];
-							this.fillSquare(placementRow, placementCol,val)
+						// Narrow down which subSquare does not have the value.
+						possibleSubSquares = [rowsStart, rowsStart + 1, rowsStart + 2],
+						actualSubSquares = coords.map(function(e){ 
+								if(!e[1] === -1){
+									return this.subSquareIdx(e[0],e[1]); 
+								}
+							},this);
+						// Filter out everything but the subSquare without the number assigned.
+						possibleSubSquares = possibleSubSquares.filter(function(e){
+							return (actualSubSquares.indexOf(e) === -1);
+						});
+						
+						// Extract the segment of the row the value could be placed into.
+						var rowSegment = this.board.data[definiteRowCoord].slice(possibleSubSquares, 3);
+
+						// If there's only one empty slot, the value must be placed there.
+						if(rowSegment.filter(function(e){
+							return e === 0;
+						}).length === 1){
+							var definiteColCoord = rowSegment.indexOf(0);
+							this.fillSquare(definiteRowCoord, definiteColCoord,value);
 						}
-							 
-					}
-				}
 
-				// Check columns of subSquares.
-			}, this);
+					}
+
+				}
+			},this);
 		},
 		eliminatePairs: function(){
 			this.eliminateGroups(2);	

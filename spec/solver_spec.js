@@ -4,6 +4,17 @@ describe('solver', function(){
 		brd = new Sudoku.Board(true);
 		slv = new Sudoku.Solver(brd);
 	});
+	describe('#subSquareIdx', function(){
+		it("correctly converts a row, column pair to a subSquare offset", function(){
+			expect(slv.subSquareIdx(2,2)).toEqual(0);
+		});
+	});
+	describe('#inverseSubSquareIdx', function(){
+		it("correctly converts an offset into a flattened version of the subSquare array to a row, col pair", function(){
+			var target = [2,2];
+			expect(slv.inverseSubSquareIdx(19)).toArrayEq([2,2]);
+		});
+	});
 	describe('#processSubSquares', function(){
 		beforeEach(function(){
 			slv.board.data = [[5,0,8,0,4,1,6,0,0],
@@ -29,6 +40,59 @@ describe('solver', function(){
 						  [0,0,2, 0,5,0, 3,0,9]];
 
 			expect(slv.subSquares).toArrayEq(target);
+		});
+	});
+	describe('#allButOne', function(){
+		describe('horizontal case', function(){
+			beforeEach(function(){
+				slv.board.data = [[0,0,9,5,1,0,0,6,2],
+		                          [6,3,4,0,0,0,5,9,0],
+		                          [1,2,5,6,3,9,7,0,4],
+		                          [0,0,0,0,0,0,0,0,0],
+		                          [0,0,0,0,0,0,0,0,0],
+		                          [0,0,0,0,0,0,0,0,0],
+		                          [0,0,0,0,0,0,0,0,0],
+		                          [0,0,0,0,0,0,0,0,0],
+		                          [0,0,0,0,0,0,0,0,0]];
+			});
+			it('determines that a 1 can only be placed in cell [8, 1]', function(){
+				slv.allButOne();
+				var target = [[0,0,9,5,1,0,0,6,2],
+	                          [6,3,4,0,0,0,5,9,1],
+	                          [1,2,5,6,3,9,7,0,4],
+	                          [0,0,0,0,0,0,0,0,0],
+	                          [0,0,0,0,0,0,0,0,0],
+	                          [0,0,0,0,0,0,0,0,0],
+	                          [0,0,0,0,0,0,0,0,0],
+	                          [0,0,0,0,0,0,0,0,0],
+	                          [0,0,0,0,0,0,0,0,0]];
+	            expect(slv.board.data).toArrayEq(target);
+			});
+		});
+		describe('vertical case', function(){
+			beforeEach(function(){
+				slv.board.data = [[1,6,0,0,0,0,0,0,0],
+		                          [2,3,0,0,0,0,0,0,0],
+		                          [5,4,9,0,0,0,0,0,0],
+		                          [6,0,5,0,0,0,0,0,0],
+		                          [3,0,1,0,0,0,0,0,0],
+		                          [9,0,0,0,0,0,0,0,0],
+		                          [7,5,0,0,0,0,0,0,0],
+		                          [0,9,6,0,0,0,0,0,0],
+		                          [4,0,2,0,0,0,0,0,0]];
+			});
+			it('determines that 1 can only be placed in cell [ ]', function(){
+				var target =[[1,6,0,0,0,0,0,0,0],
+	                          [2,3,0,0,0,0,0,0,0],
+	                          [5,4,9,0,0,0,0,0,0],
+	                          [6,0,5,0,0,0,0,0,0],
+	                          [3,0,1,0,0,0,0,0,0],
+	                          [9,0,0,0,0,0,0,0,0],
+	                          [7,5,0,0,0,0,0,0,0],
+	                          [0,9,6,0,0,0,0,0,0],
+	                          [4,1,2,0,0,0,0,0,0]];
+	            expect(slv.board.data).toArrayEq(target);
+			});
 		});
 	});
 	describe('#eliminateGroups', function(){
