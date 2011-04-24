@@ -88,7 +88,7 @@ $(document).ready(function(){
         if(gameBoard.ready){
             setInterval(function(){
                 solver.solve();
-            }, 1000);
+            }, 500);
         }else{
             displayError("Game board not initialized. Enter at least one number.");
         }

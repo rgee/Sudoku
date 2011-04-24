@@ -13,6 +13,9 @@
 		// Cached copy of the internal representation from the previous iteration.
 		this.lastInternalRepr = [];
 
+		this.allSet = new HashSet(function(u){ return u;}, function(u, v){return u === v;});
+		this.allSet.addAll([1,2,3,4,5,6,7,8,9]);
+
 		// Set up the internal representation.
 		this.processSubSquares();
 		this.calculatePotentials();
@@ -43,6 +46,75 @@
 			this.eliminateTriples();
 
 			this.takeOpportunities();
+		},
+
+		// Returns true if the current configuration is solved. False otherwise.
+		solved: function(){
+			return  this.rowsValid() &&
+					this.columnsValid() &&
+					this.subSquaresValid();	
+
+		},
+		// Returns true if an array of numbers is a permutation of 1 to 9.
+		isPermutation: function(numbers){
+			if(numbers.length !== 9){
+				return false;
+			}
+			// Use a set to detect duplicates
+			var seen = new HashSet(function(u){ return u;}, function(u, v){return u === v;}),
+				allPresent = true,
+				noDuplicates = true;
+
+			// Check if there are any duplicate numbers
+			numbers.forEach(function(e){
+				if(seen.contains(e)){
+					noDuplicates = false;
+				} else {
+					seen.add(e);
+				}
+			});
+
+			// Check if every number in 1...9 is present.
+			allPresent = this.allSet.values().every(function(e){
+				return seen.contains(e);
+			});
+
+			return (allPresent && noDuplicates);
+		},
+		// Returns true if all the rows in the board are a permutation of 1 to 9.
+		rowsValid: function(){
+			return this.board.data.every(function(row){
+				return this.isPermutation(row);
+			},this);			
+		},
+		// Returns true if all the columns in the board are a permutation of 1 to 9.
+		columnsValid: function(){
+
+			// Takes a 2d array and returns a transposed representation of it.
+			// Declare the fn in a closure so it isn't created on every invocation.
+			var transpose = function(arr){
+				var temp,
+					result = arr.slice(0, arr.length);
+				for(var i = 0; i < 9; i++){
+					for(var j = 0; j < 9; j++){
+						temp = arr[i][j];
+						arr[i][j] = arr[j][i];
+						arr[j][i] = temp;
+					}
+				}
+				return result;
+			};
+			return function(){
+				// Rotate the array 90 degrees, then check if the rows are then valid.
+				return this.rowsValid(transpose(this.board.data));
+			}.call(this);
+			
+		},
+		// Returns true if all the 3x3 subSquares are a permutation of 1 to 9.
+		subSquaresValid: function(){
+			return this.subSquares.every(function(ss){
+				return this.isPermutation(ss);
+			},this);
 		},
 
 		// Divides the grid into the 3x3 units for constraint testing and stores them in
@@ -189,6 +261,7 @@
 			var all = [1,2,3,4,5,6,7,8,9];
 
 			all.forEach(function(value){
+				// Performs the allButOne check on rows.
 				for(var rowsStart = 0, rowsEnd = 3; rowsEnd < 9; rowsEnd += 3, rowsStart +=3){
 					var rowGroup = [this.board.data[rowsStart],
 							        this.board.data[rowsStart + 1],
@@ -201,7 +274,6 @@
 
 						return [row, col];
 					});
-					
 					// Only continue if exactly one row did not have the given number assigned.
 					if(coords.filter(function(e){
 						return (e[1] === -1);
@@ -212,28 +284,29 @@
 							return (e[1] === -1);
 						}).map(function(e){
 							return e[0];
-						});
+						})[0];
 
 						// Narrow down which subSquare does not have the value.
 						possibleSubSquares = [rowsStart, rowsStart + 1, rowsStart + 2],
-						actualSubSquares = coords.map(function(e){ 
-								if(!e[1] === -1){
-									return this.subSquareIdx(e[0],e[1]); 
-								}
-							},this);
+						actualSubSquares = coords.filter(function(e){
+							return e[1] !== -1;
+						}).map(function(e){
+							return this.subSquareIdx(e[0], e[1]);
+						}, this);
+
 						// Filter out everything but the subSquare without the number assigned.
-						possibleSubSquares = possibleSubSquares.filter(function(e){
-							return (actualSubSquares.indexOf(e) === -1);
-						});
-						
+						actualSubSquares = possibleSubSquares.filter(function(e){
+							return actualSubSquares.indexOf(e) === -1;
+						})[0];
+
 						// Extract the segment of the row the value could be placed into.
-						var rowSegment = this.board.data[definiteRowCoord].slice(possibleSubSquares, 3);
+						var rowSegment = this.board.data[definiteRowCoord].slice(actualSubSquares*3, actualSubSquares*3 + 3);
 
 						// If there's only one empty slot, the value must be placed there.
 						if(rowSegment.filter(function(e){
 							return e === 0;
 						}).length === 1){
-							var definiteColCoord = rowSegment.indexOf(0);
+							var definiteColCoord = (actualSubSquares * 3) + rowSegment.indexOf(0);
 							this.fillSquare(definiteRowCoord, definiteColCoord,value);
 						}
 

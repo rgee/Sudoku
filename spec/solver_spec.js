@@ -4,6 +4,51 @@ describe('solver', function(){
 		brd = new Sudoku.Board(true);
 		slv = new Sudoku.Solver(brd);
 	});
+	describe('#isPermutation', function(){
+		it("correctly determines that [1,5,2,4,3,6,9,7,8] is a permutation of [1,2,3,4,5,6,7,8,9]", function(){
+			expect(slv.isPermutation([2,8,4,6,3,5,1,7,9])).toEqual(true);
+		});
+		it("correctly determines that [1,2,3,4,5,5,6,7,8,9] is not a permutation of [1,2,3,4,5,6,7,8,9]", function(){
+			expect(slv.isPermutation([1,2,3,4,5,5,6,7,8,9])).toEqual(false);
+		});
+	});
+	describe('#solved', function(){
+		describe('a correct board configuration', function(){
+			beforeEach(function(){
+				slv.board.data = [[5,3,4, 6,7,8, 9,1,2],
+								  [6,7,2, 1,9,5, 3,4,8],
+								  [1,9,8, 3,4,2, 5,6,7],
+
+								  [8,5,9, 7,6,1, 4,2,3],
+								  [4,2,6, 8,5,3, 7,9,1],
+								  [7,1,3, 9,2,4, 8,5,6],
+
+								  [9,6,1, 5,3,7, 2,8,4],
+								  [2,8,7, 4,1,9, 6,3,5],
+								  [3,4,5, 2,8,6, 1,7,9]];
+				slv.processSubSquares();
+			});
+			it('determines that the board is solved', function(){
+				expect(slv.solved()).toEqual(true);
+			});
+		});
+		describe('an incorrect board configuration', function(){
+			beforeEach(function(){
+				slv.board.data = [[5,4,3,8,1,2,6,7,9],
+								  [7,8,1,6,4,9,5,2,3],
+								  [2,6,9,5,7,3,4,8,1],
+								  [3,6,2,7,5,8,9,1,4],
+								  [9,5,8,1,3,4,7,6,2],
+								  [1,7,4,9,2,6,8,9,5],
+								  [4,3,9,2,6,7,1,5,8],
+								  [8,1,7,3,9,5,2,4,6],
+								  [6,2,5,4,8,1,3,9,7]];
+			});
+			it('determines that the board is not solved', function(){
+				expect(slv.solved()).toEqual(false);
+			});
+		});
+	});
 	describe('#subSquareIdx', function(){
 		it("correctly converts a row, column pair to a subSquare offset", function(){
 			expect(slv.subSquareIdx(2,2)).toEqual(0);
@@ -57,7 +102,7 @@ describe('solver', function(){
 			});
 			it('determines that a 1 can only be placed in cell [8, 1]', function(){
 				slv.allButOne();
-				var target = [[0,0,9,5,1,0,0,6,2],
+				var target = [[0,0,9,5,1,4,3,6,2],
 	                          [6,3,4,0,0,0,5,9,1],
 	                          [1,2,5,6,3,9,7,0,4],
 	                          [0,0,0,0,0,0,0,0,0],
@@ -82,13 +127,14 @@ describe('solver', function(){
 		                          [4,0,2,0,0,0,0,0,0]];
 			});
 			it('determines that 1 can only be placed in cell [ ]', function(){
+				slv.allButOne();
 				var target =[[1,6,0,0,0,0,0,0,0],
 	                          [2,3,0,0,0,0,0,0,0],
 	                          [5,4,9,0,0,0,0,0,0],
 	                          [6,0,5,0,0,0,0,0,0],
 	                          [3,0,1,0,0,0,0,0,0],
 	                          [9,0,0,0,0,0,0,0,0],
-	                          [7,5,0,0,0,0,0,0,0],
+	                          [7,5,3,0,0,0,0,0,0],
 	                          [0,9,6,0,0,0,0,0,0],
 	                          [4,1,2,0,0,0,0,0,0]];
 	            expect(slv.board.data).toArrayEq(target);
