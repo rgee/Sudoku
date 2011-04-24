@@ -4,6 +4,24 @@ describe('solver', function(){
 		brd = new Sudoku.Board(true);
 		slv = new Sudoku.Solver(brd);
 	});
+	describe('#getColumn', function(){
+		beforeEach(function(){
+			brd.data = [[0,0,3,8,1,0,6,7,0],
+                        [7,0,0,6,4,0,0,0,3],
+                        [0,9,0,0,0,3,0,0,0],
+                        [3,0,0,7,0,0,0,1,4],
+                        [0,0,0,0,0,0,0,0,0],
+                        [1,7,0,0,0,6,0,0,5],
+                        [0,0,0,2,0,0,0,5,0],
+                        [8,0,0,0,9,5,0,0,6],
+                        [0,2,5,0,8,1,3,0,0]];
+		});
+		it('extracts the third column', function(){
+			var target = [3,0,0,0,0,0,0,0,5];
+			expect(brd.getColumn(2)).toArrayEq(target);
+		});
+
+	});
 	describe('#isPermutation', function(){
 		it("correctly determines that [1,5,2,4,3,6,9,7,8] is a permutation of [1,2,3,4,5,6,7,8,9]", function(){
 			expect(slv.isPermutation([2,8,4,6,3,5,1,7,9])).toEqual(true);

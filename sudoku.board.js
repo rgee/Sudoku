@@ -47,7 +47,7 @@
     function Board(defaultConfig){
         this.ready = false;
         if(defaultConfig !== undefined){
-            this.data = defaultMediumBoard;
+            this.data = allButOneTestBoardV;
             this.ready = true;
         } else {
             this.data = new Array(9);
@@ -61,11 +61,20 @@
     }
 
     Board.prototype = {
+        // Fill in a square on the board. If it is already filled, this function does nothing.
         fillSquare: function(row, col, val) {
             this.data[row][col] = val;
             if(!this.ready){
                 this.ready = true;
             }
+        },
+        // Extracts a particular column (in the range of 0 to 8) from the board as an array.
+        getColumn: function(col){
+            var result = [];
+            this.data.forEach(function(e){
+                result.push(e[col]);
+            });
+            return result;
         }
     };
 

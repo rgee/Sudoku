@@ -42,16 +42,16 @@
 			this.processSubSquares();
 			this.calculatePotentials();
 			this.allButOne();
-			this.eliminatePairs();
-			this.eliminateTriples();
+			// this.eliminatePairs();
+			// this.eliminateTriples();
 
-			this.takeOpportunities();
+			//this.takeOpportunities();
 		},
 
 		// Returns true if the current configuration is solved. False otherwise.
 		solved: function(){
 			return  this.rowsValid() &&
-					this.columnsValid() &&
+					this.columnsValid() 
 					this.subSquaresValid();	
 
 		},
@@ -221,6 +221,8 @@
 				numOccurrences = 0,
 				location = 0;
 			all.forEach(function(number){
+
+
 				// Iterate through the potential 3d array by subsquare
 
 
@@ -309,9 +311,48 @@
 							var definiteColCoord = (actualSubSquares * 3) + rowSegment.indexOf(0);
 							this.fillSquare(definiteRowCoord, definiteColCoord,value);
 						}
-
 					}
+				}
 
+				// Perform the all but one check on groups of columns...eugh.
+				for(var colsStart = 0, colsEnd = 3; colsEnd < 9; colsEnd += 3, colsStart += 3){
+					var colGroup = [this.board.getColumn(colsStart),
+						            this.board.getColumn(colsStart + 1),
+						            this.board.getColumn(colsStart + 2)];
+					coords = colGroup.map(function(elem, index){
+						var row = elem.indexOf(value),
+							col = colsStart + index;
+						return [row, col];
+					});
+					if(coords.filter(function(e){
+						return (e[0] === -1);
+					}).length === 1){
+						var definiteColCoord = coords.filter(function(e){
+							return (e[0] === -1);
+						}).map(function(e){
+							return e[1];
+						})[0];
+
+						possibleSubSquares = [colsStart, colsStart + 1, colsStart +2],
+						actualSubSquares = coords.filter(function(e){
+								return e[0] !== -1;
+							}).map(function(e){
+								return this.subSquareIdx(e[0], e[1]);
+							}, this);
+
+						actualSubSquares = possibleSubSquares.filter(function(e){
+							return actualSubSquares.indexOf(e) === -1;
+						});
+
+						var colSegment = this.board.getColumn(definiteColCoord).slice(actualSubSquares*3, actualSubSquares*3 + 3);
+
+						if(colSegment.filter(function(e){
+							return e === 0;
+						}).length === 1){
+							var definiteRowCoord = (actualSubSquares * 3) + colSegment.indexOf(0);
+							this.fillSquare(definiteRowCoord, definiteColCoord, value);
+						}
+					}
 				}
 			},this);
 		},
