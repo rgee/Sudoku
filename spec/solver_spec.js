@@ -1,6 +1,7 @@
 describe('solver', function(){
 	var slv, brd;
 	beforeEach(function(){
+		
 		brd = new Sudoku.Board(true);
 		slv = new Sudoku.Solver(brd);
 	});
@@ -151,7 +152,7 @@ describe('solver', function(){
 	                          [5,4,9,0,0,0,0,0,0],
 	                          [6,0,5,0,0,0,0,0,0],
 	                          [3,0,1,0,0,0,0,0,0],
-	                          [9,0,0,0,0,0,0,0,0],
+	                          [9,0,4,0,0,0,0,0,0],
 	                          [7,5,3,0,0,0,0,0,0],
 	                          [0,9,6,0,0,0,0,0,0],
 	                          [4,1,2,0,0,0,0,0,0]];

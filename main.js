@@ -33,7 +33,6 @@ $(document).ready(function(){
         };
         
         proc.setup = function() {
-        
         };
         
         proc.drawSelected = function() {
@@ -76,7 +75,8 @@ $(document).ready(function(){
     }
 
 
-    function startSolve(solver){
+    function startSolve(solver, board){
+        board.parseBoard($('#puzzle_input').val());
         var solve = (function(){
             var i = 0;
             return function(){
@@ -88,7 +88,7 @@ $(document).ready(function(){
         if(gameBoard.ready){
             setInterval(function(){
                 solver.solve();
-            }, 500);
+            }, 2000);
         }else{
             displayError("Game board not initialized. Enter at least one number.");
         }
@@ -96,13 +96,13 @@ $(document).ready(function(){
     
 
     var term, context, solver, gameBoard, procInstance;
-
-    term = new Terminal('.terminal', 450, 385);
-    gameBoard = new Sudoku.Board(true);
-    solver = new Sudoku.Solver(gameBoard);
-    
     procInstance = new Processing(document.getElementById('board'), draw);
     procInstance.size(400,400);
     context = document.getElementById('board').getContext('2d');
-    $("#start").click(function(){startSolve(solver);});
+    term = new Terminal('.terminal', 450, 385);
+    gameBoard = new Sudoku.Board(false, procInstance);
+    solver = new Sudoku.Solver(gameBoard);
+    
+
+    $("#start").click(function(){startSolve(solver, gameBoard);});
 });

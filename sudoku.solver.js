@@ -1,7 +1,8 @@
 (function(){
-	function Solver(board){
+	function Solver(board, proc){
 		// Array of 2d, row-major arrays representing the 3x3 subSquares on the board.
 		this.subSquares = [];
+		this.proc = board.proc;
 
 		// Board object
 		this.board = board;
@@ -16,9 +17,16 @@
 		this.allSet = new HashSet(function(u){ return u;}, function(u, v){return u === v;});
 		this.allSet.addAll([1,2,3,4,5,6,7,8,9]);
 
+		this.strategies = [];
+		this.strategies.push(this.allButOne, this.eliminatePairs, this.eliminateTriples,  this.takeOpportunities);
+		this.currentStrategy = 0;
+
 		// Set up the internal representation.
-		this.processSubSquares();
-		this.calculatePotentials();
+		if(this.board.ready){
+			this.processSubSquares();
+			this.calculatePotentials();
+		}
+		this.solvedMessageDisplayed = false;
 	}
 
 
@@ -39,13 +47,19 @@
 	Solver.prototype = {
 		// Run through all knowledge-refinement and square-filling tactics once.
 		solve: function(){
+			// Make sure our internal representations are up-to-date.
 			this.processSubSquares();
 			this.calculatePotentials();
-			this.allButOne();
-			// this.eliminatePairs();
-			// this.eliminateTriples();
 
-			//this.takeOpportunities();
+			this.allButOne();
+			this.eliminatePairs();
+			this.eliminateTriples();
+			this.takeOpportunities();
+
+			if(this.solved() && !this.solvedMessageDisplayed){
+				console.log('Puzzle solved.');
+				this.solvedMessageDisplayed = true;
+			}
 		},
 
 		// Returns true if the current configuration is solved. False otherwise.
@@ -156,6 +170,7 @@
 				for(var row = 0; row < 9; row++){
 					if(this.internalRepr[row][col].length == 1){
 						this.fillSquare(row,col,this.internalRepr[row][col][0]);
+						console.log('Added ' + '('+col+','+row+') to the board because it had no other options.');
 					}	
 				}
 
@@ -260,7 +275,9 @@
 		 // not have it. Using that, we see if the row or column, within the subgroup without that number only has one square
 		 // left unfilled. If so, fill it with that number because we know it could go nowhere else.
 		allButOne: function(){
-			var all = [1,2,3,4,5,6,7,8,9];
+			var all = [1,2,3,4,5,6,7,8,9],
+				possibleSubSquares,
+				actualSubSquares;
 
 			all.forEach(function(value){
 				// Performs the allButOne check on rows.
@@ -310,6 +327,7 @@
 						}).length === 1){
 							var definiteColCoord = (actualSubSquares * 3) + rowSegment.indexOf(0);
 							this.fillSquare(definiteRowCoord, definiteColCoord,value);
+							console.log('Added ' + value + ' to the board at ('+definiteColCoord+','+definiteRowCoord+') using AllButOne.');
 						}
 					}
 				}
@@ -333,7 +351,7 @@
 							return e[1];
 						})[0];
 
-						possibleSubSquares = [colsStart, colsStart + 1, colsStart +2],
+						possibleSubSquares = [colsStart, colsStart + 1, colsStart +2].map(function(e){return e*3;}),
 						actualSubSquares = coords.filter(function(e){
 								return e[0] !== -1;
 							}).map(function(e){
@@ -342,15 +360,16 @@
 
 						actualSubSquares = possibleSubSquares.filter(function(e){
 							return actualSubSquares.indexOf(e) === -1;
-						});
+						})[0];
 
-						var colSegment = this.board.getColumn(definiteColCoord).slice(actualSubSquares*3, actualSubSquares*3 + 3);
+						var colSegment = this.board.getColumn(definiteColCoord).slice(actualSubSquares, actualSubSquares + 3);
 
 						if(colSegment.filter(function(e){
 							return e === 0;
 						}).length === 1){
-							var definiteRowCoord = (actualSubSquares * 3) + colSegment.indexOf(0);
+							var definiteRowCoord = actualSubSquares + colSegment.indexOf(0);
 							this.fillSquare(definiteRowCoord, definiteColCoord, value);
+							console.log('Added ' + value + ' to the board at ('+definiteColCoord+','+definiteRowCoord+') using AllButOne.');
 						}
 					}
 				}
@@ -404,6 +423,7 @@
 										var result = true;
 										for(var i = 0; i < elem.length; i++){
 											if(elem[i] === e){
+												console.log('Eliminated ' + e + ' from ' + '(' + row + ',' + index + ')s possibility list in the knowledge base.');
 												result = false;
 												break;
 											}
@@ -425,10 +445,11 @@
 						if(numMatches === length-1){
 							for(var i = 0; i < 9; i++){
 								if(!elem.compareArrays(this.internalRepr[i][col])){
-									this.internalRepr[i][col] = this.internalRepr[i][col].filter(function(e, idx, arr){
+									this.internalRepr[i][col] = this.internalRepr[i][col].filter(function(e, index, arr){
 										var result = true;
 										for(var i = 0; i < elem.length; i++){
 											if(elem[i] === e){
+												console.log('Eliminated ' + e + ' from ' + '(' + col + ',' + index + ')s possibility list in the knowledge base.');
 												result = false;
 												break;
 											}

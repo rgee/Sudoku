@@ -16,6 +16,11 @@ body{
 	margin: 0px 0px 5px 0px;
 }
 
+#input_area{
+	text-align: center;
+	margin: 0px auto;
+}
+
 #errortext{
 	visibility: hidden;
 	background: #FFC4C5;
