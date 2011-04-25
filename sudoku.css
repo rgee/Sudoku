@@ -39,17 +39,26 @@ body{
 
 #menu{
 	clear:both;
-	padding: 20px 60% 0% 40%;
+	padding: 20px 20% 0% 30%;
 }
 
-#menu button {
+.menu_button {
+	display: inline;
 	font-size: 20px;
 	width: 150px;
 	height: 50px;
 }
 
-.terminal{
-	background: blue;
+.log_output{
+	width: 480px;
+	height: 401px;
+	overflow: auto;
+	color: #FFF;
+	background-color: #000;
+	border: 1px solid #666;
+	padding: 8px;
+	font-family: 'Helvetica';
+	font-size: 12px;
 	float: right;
 	border: 1px solid black;
 }

@@ -1,7 +1,7 @@
 describe('solver', function(){
 	var slv, brd;
 	beforeEach(function(){
-		
+
 		brd = new Sudoku.Board(true);
 		slv = new Sudoku.Solver(brd);
 	});
@@ -120,8 +120,8 @@ describe('solver', function(){
 		                          [0,0,0,0,0,0,0,0,0]];
 			});
 			it('determines that a 1 can only be placed in cell [8, 1]', function(){
-				slv.allButOne();
-				var target = [[0,0,9,5,1,4,3,6,2],
+				slv.allButOne(1);
+				var target = [[0,0,9,5,1,0,0,6,2],
 	                          [6,3,4,0,0,0,5,9,1],
 	                          [1,2,5,6,3,9,7,0,4],
 	                          [0,0,0,0,0,0,0,0,0],
@@ -146,14 +146,14 @@ describe('solver', function(){
 		                          [4,0,2,0,0,0,0,0,0]];
 			});
 			it('determines that 1 can only be placed in cell [ ]', function(){
-				slv.allButOne();
+				slv.allButOne(1);
 				var target =[[1,6,0,0,0,0,0,0,0],
 	                          [2,3,0,0,0,0,0,0,0],
 	                          [5,4,9,0,0,0,0,0,0],
 	                          [6,0,5,0,0,0,0,0,0],
 	                          [3,0,1,0,0,0,0,0,0],
-	                          [9,0,4,0,0,0,0,0,0],
-	                          [7,5,3,0,0,0,0,0,0],
+	                          [9,0,0,0,0,0,0,0,0],
+	                          [7,5,0,0,0,0,0,0,0],
 	                          [0,9,6,0,0,0,0,0,0],
 	                          [4,1,2,0,0,0,0,0,0]];
 	            expect(slv.board.data).toArrayEq(target);

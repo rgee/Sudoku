@@ -1,4 +1,5 @@
 (function(){
+    // An easy sudoku.
     var defaultEasyBoard = [[5,0,8,0,4,1,6,0,0],
                             [0,6,0,8,0,9,0,0,0],
                             [1,0,0,6,0,0,5,4,0],
@@ -8,6 +9,7 @@
                             [0,1,4,0,0,5,0,0,2],
                             [0,0,0,2,0,6,0,5,0],
                             [0,0,6,4,8,0,3,0,9]],
+        // A slightly harder sudoku.
         defaultMediumBoard = [[0,0,3,8,1,0,6,7,0],
                               [7,0,0,6,4,0,0,0,3],
                               [0,9,0,0,0,3,0,0,0],
@@ -17,6 +19,7 @@
                               [0,0,0,2,0,0,0,5,0],
                               [8,0,0,0,9,5,0,0,6],
                               [0,2,5,0,8,1,3,0,0]],
+        // Test for the allButOne strategy. 
         allButOneTestBoardH = [[0,0,9,5,1,0,0,6,2],
                               [6,3,4,0,0,0,5,9,0],
                               [1,2,5,6,3,9,7,0,4],
@@ -26,6 +29,7 @@
                               [0,0,0,0,0,0,0,0,0],
                               [0,0,0,0,0,0,0,0,0],
                               [0,0,0,0,0,0,0,0,0]],
+        // Test for the allButOne strategy.
         allButOneTestBoardV = [[1,6,0,0,0,0,0,0,0],
                               [2,3,0,0,0,0,0,0,0],
                               [5,4,9,0,0,0,0,0,0],
@@ -35,6 +39,7 @@
                               [7,5,0,0,0,0,0,0,0],
                               [0,9,6,0,0,0,0,0,0],
                               [4,0,2,0,0,0,0,0,0]],
+        // Board classified as 'evil' by websudoku
         defaultEvilBoard = [[3,0,0,5,9,0,0,1,0],
                             [0,0,6,0,0,0,0,0,4],
                             [0,0,0,0,8,0,0,3,0],
@@ -44,6 +49,7 @@
                             [0,9,0,0,1,0,0,0,0],
                             [2,0,0,0,0,0,3,0,0],
                             [0,6,0,0,4,7,0,0,8]],
+        // Apparently one of the worst-case boards for brute-force solvers
         defaultVeryHardBoard = [[0,0,0,0,0,0,0,0,0],
                                 [0,0,0,0,0,3,0,8,5],
                                 [0,0,1,0,2,0,0,0,0],
@@ -57,7 +63,7 @@
         this.ready = false;
         this.proc = proc;
         if(defaultConfig === true){
-            this.data = defaultEvilBoard;
+            this.data = defaultVeryHardBoard;
             this.ready = true;
         } else {
             this.data = new Array(9);
@@ -78,6 +84,8 @@
                 this.ready = true;
             }
         },
+        // Parse a string of the form '.4.65..7.222.3 etc..' where a period indicates a blank square, numbers represent
+        // themselves in squares and the ordering is row-major. Assigns the result of parsing this string to this board's data.
         parseBoard: function(board){
             var result = [];
             var arr = board.trim().split('').map(function(e){

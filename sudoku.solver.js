@@ -14,22 +14,40 @@
 		// Cached copy of the internal representation from the previous iteration.
 		this.lastInternalRepr = [];
 
+		// Set of values from 1-9. Useful in various places.
 		this.allSet = new HashSet(function(u){ return u;}, function(u, v){return u === v;});
 		this.allSet.addAll([1,2,3,4,5,6,7,8,9]);
 
-		this.strategies = [];
-		this.strategies.push(this.allButOne, this.eliminatePairs, this.eliminateTriples,  this.takeOpportunities);
-		this.currentStrategy = 0;
+		// Array of values from 1-9. Used to limit searchess to specific values.
+		this.all = this.allSet.values();
+
+		// The index into the all array for the current value we're using for searches.
+		this.currentValueIdx = 0;
+
+		// Flag to indicate the victory message has been displayed once.
+		this.solvedMessageDisplayed = false;
+
+		// Flag to indicate if the grid has been changed this iteration.
+		this.changedThisIteration = false;
+
+		// Counter for how many consecutive times the board has not been modified.
+		this.noChangeCounter = 0;
+
+		// The maximum allowable number of consecutive times the solver can not modify the grid before giving up.
+		this.noChangeCutoff = 10;
+
+		// Is the solver solving or not?
+		this.active = true;
 
 		// Set up the internal representation.
 		if(this.board.ready){
 			this.processSubSquares();
 			this.calculatePotentials();
 		}
-		this.solvedMessageDisplayed = false;
+
 	}
 
-
+	// Add a convenience function to the array prototype to compare them.
 	if(!Array.prototype.compareArrays) {
 		Array.prototype.compareArrays = function(arr) {
 		    if (this.length != arr.length) return false;
@@ -47,18 +65,35 @@
 	Solver.prototype = {
 		// Run through all knowledge-refinement and square-filling tactics once.
 		solve: function(){
-			// Make sure our internal representations are up-to-date.
-			this.processSubSquares();
-			this.calculatePotentials();
+			if(this.active){
+				this.changedThisIteration = false;
 
-			this.allButOne();
-			this.eliminatePairs();
-			this.eliminateTriples();
-			this.takeOpportunities();
+				// Make sure our internal representations are up-to-date.
+				this.processSubSquares();
+				this.calculatePotentials();
 
-			if(this.solved() && !this.solvedMessageDisplayed){
-				console.log('Puzzle solved.');
-				this.solvedMessageDisplayed = true;
+				this.allButOne(this.all[this.currentValueIdx]);
+				this.eliminatePairs();
+				this.eliminateTriples();
+				this.takeOpportunities(this.all[this.currentValueIdx]);;
+
+				if(!this.changedThisIteration){
+					this.noChangeCounter++;
+				}else{
+					this.noChangeCounter = 0;
+				}
+				if(this.noChangeCounter > this.noChangeCutoff){
+					this.active = false;
+					Sudoku.log('Went too long without modifying the grid. Stuck.');
+				}
+
+				if(this.solved() && !this.solvedMessageDisplayed){
+					Sudoku.log('Puzzle solved.');
+					this.solvedMessageDisplayed = true;
+					this.active = false;
+				}
+
+				this.currentValueIdx = (this.currentValueIdx + 1) % 9;
 			}
 		},
 
@@ -164,13 +199,14 @@
 		},
 
 		// Fill a square on the grid if it only has one potential value.
-		takeOpportunities : function(){
-
+		takeOpportunities : function(value){
+			Sudoku.log('*TakeOpportunities*');
 			for(var col = 0; col < 9; col++){
 				for(var row = 0; row < 9; row++){
-					if(this.internalRepr[row][col].length == 1){
-						this.fillSquare(row,col,this.internalRepr[row][col][0]);
-						console.log('Added ' + '('+col+','+row+') to the board because it had no other options.');
+					if(this.internalRepr[row][col].length === 1 && this.internalRepr[row][col][0] === value){
+						this.fillSquare(row,col,value);
+						this.changedThisIteration = true;
+						Sudoku.log('Added ' + value + ' to the board at ('+col+','+row+') by TakeOpportunities.');
 					}	
 				}
 
@@ -274,111 +310,112 @@
 		 // the group covers, then we know what row or column that number must appear within the final subsquare that does
 		 // not have it. Using that, we see if the row or column, within the subgroup without that number only has one square
 		 // left unfilled. If so, fill it with that number because we know it could go nowhere else.
-		allButOne: function(){
-			var all = [1,2,3,4,5,6,7,8,9],
-				possibleSubSquares,
+		allButOne: function(value){
+			Sudoku.log('AllButOne')
+			var possibleSubSquares,
 				actualSubSquares;
 
-			all.forEach(function(value){
-				// Performs the allButOne check on rows.
-				for(var rowsStart = 0, rowsEnd = 3; rowsEnd < 9; rowsEnd += 3, rowsStart +=3){
-					var rowGroup = [this.board.data[rowsStart],
-							        this.board.data[rowsStart + 1],
-							        this.board.data[rowsStart + 2]],
-					// Map the three rows to an array of pairs representing the coordinates
-					// of the given element in the board.
-					coords = rowGroup.map(function(elem, index){
-						var	row = rowsStart + index,
-							col = elem.indexOf(value);
+			// Performs the allButOne check on rows.
+			for(var rowsStart = 0, rowsEnd = 3; rowsEnd < 9; rowsEnd += 3, rowsStart +=3){
+				var rowGroup = [this.board.data[rowsStart],
+						        this.board.data[rowsStart + 1],
+						        this.board.data[rowsStart + 2]],
+				// Map the three rows to an array of pairs representing the coordinates
+				// of the given element in the board.
+				coords = rowGroup.map(function(elem, index){
+					var	row = rowsStart + index,
+						col = elem.indexOf(value);
 
-						return [row, col];
-					});
-					// Only continue if exactly one row did not have the given number assigned.
-					if(coords.filter(function(e){
+					return [row, col];
+				});
+				// Only continue if exactly one row did not have the given number assigned.
+				if(coords.filter(function(e){
+					return (e[1] === -1);
+				}).length === 1) {
+
+					// Grab the coordinate of the row without the value in it.
+					var definiteRowCoord = coords.filter(function(e){
 						return (e[1] === -1);
-					}).length === 1) {
+					}).map(function(e){
+						return e[0];
+					})[0];
 
-						// Grab the coordinate of the row without the value in it.
-						var definiteRowCoord = coords.filter(function(e){
-							return (e[1] === -1);
-						}).map(function(e){
-							return e[0];
-						})[0];
+					// Narrow down which subSquare does not have the value.
+					possibleSubSquares = [rowsStart, rowsStart + 1, rowsStart + 2],
+					actualSubSquares = coords.filter(function(e){
+						return e[1] !== -1;
+					}).map(function(e){
+						return this.subSquareIdx(e[0], e[1]);
+					}, this);
 
-						// Narrow down which subSquare does not have the value.
-						possibleSubSquares = [rowsStart, rowsStart + 1, rowsStart + 2],
-						actualSubSquares = coords.filter(function(e){
-							return e[1] !== -1;
+					// Filter out everything but the subSquare without the number assigned.
+					actualSubSquares = possibleSubSquares.filter(function(e){
+						return actualSubSquares.indexOf(e) === -1;
+					})[0];
+
+					// Extract the segment of the row the value could be placed into.
+					var rowSegment = this.board.data[definiteRowCoord].slice(actualSubSquares*3, actualSubSquares*3 + 3);
+
+					// If there's only one empty slot, the value must be placed there.
+					if(rowSegment.filter(function(e){
+						return e === 0;
+					}).length === 1){
+						var definiteColCoord = (actualSubSquares * 3) + rowSegment.indexOf(0);
+						this.fillSquare(definiteRowCoord, definiteColCoord,value);
+						this.changedThisIteration = true;
+						Sudoku.log('Added ' + value + ' to the board at ('+definiteColCoord+','+definiteRowCoord+') using AllButOne.');
+					}
+				}
+			}
+
+			// Perform the all but one check on groups of columns...eugh.
+			for(var colsStart = 0, colsEnd = 3; colsEnd < 9; colsEnd += 3, colsStart += 3){
+				var colGroup = [this.board.getColumn(colsStart),
+					            this.board.getColumn(colsStart + 1),
+					            this.board.getColumn(colsStart + 2)];
+				coords = colGroup.map(function(elem, index){
+					var row = elem.indexOf(value),
+						col = colsStart + index;
+					return [row, col];
+				});
+				if(coords.filter(function(e){
+					return (e[0] === -1);
+				}).length === 1){
+					var definiteColCoord = coords.filter(function(e){
+						return (e[0] === -1);
+					}).map(function(e){
+						return e[1];
+					})[0];
+
+					possibleSubSquares = [colsStart, colsStart + 1, colsStart +2].map(function(e){return e*3;}),
+					actualSubSquares = coords.filter(function(e){
+							return e[0] !== -1;
 						}).map(function(e){
 							return this.subSquareIdx(e[0], e[1]);
 						}, this);
 
-						// Filter out everything but the subSquare without the number assigned.
-						actualSubSquares = possibleSubSquares.filter(function(e){
-							return actualSubSquares.indexOf(e) === -1;
-						})[0];
+					actualSubSquares = possibleSubSquares.filter(function(e){
+						return actualSubSquares.indexOf(e) === -1;
+					})[0];
 
-						// Extract the segment of the row the value could be placed into.
-						var rowSegment = this.board.data[definiteRowCoord].slice(actualSubSquares*3, actualSubSquares*3 + 3);
+					var colSegment = this.board.getColumn(definiteColCoord).slice(actualSubSquares, actualSubSquares + 3);
 
-						// If there's only one empty slot, the value must be placed there.
-						if(rowSegment.filter(function(e){
-							return e === 0;
-						}).length === 1){
-							var definiteColCoord = (actualSubSquares * 3) + rowSegment.indexOf(0);
-							this.fillSquare(definiteRowCoord, definiteColCoord,value);
-							console.log('Added ' + value + ' to the board at ('+definiteColCoord+','+definiteRowCoord+') using AllButOne.');
-						}
-					}
-				}
-
-				// Perform the all but one check on groups of columns...eugh.
-				for(var colsStart = 0, colsEnd = 3; colsEnd < 9; colsEnd += 3, colsStart += 3){
-					var colGroup = [this.board.getColumn(colsStart),
-						            this.board.getColumn(colsStart + 1),
-						            this.board.getColumn(colsStart + 2)];
-					coords = colGroup.map(function(elem, index){
-						var row = elem.indexOf(value),
-							col = colsStart + index;
-						return [row, col];
-					});
-					if(coords.filter(function(e){
-						return (e[0] === -1);
+					if(colSegment.filter(function(e){
+						return e === 0;
 					}).length === 1){
-						var definiteColCoord = coords.filter(function(e){
-							return (e[0] === -1);
-						}).map(function(e){
-							return e[1];
-						})[0];
-
-						possibleSubSquares = [colsStart, colsStart + 1, colsStart +2].map(function(e){return e*3;}),
-						actualSubSquares = coords.filter(function(e){
-								return e[0] !== -1;
-							}).map(function(e){
-								return this.subSquareIdx(e[0], e[1]);
-							}, this);
-
-						actualSubSquares = possibleSubSquares.filter(function(e){
-							return actualSubSquares.indexOf(e) === -1;
-						})[0];
-
-						var colSegment = this.board.getColumn(definiteColCoord).slice(actualSubSquares, actualSubSquares + 3);
-
-						if(colSegment.filter(function(e){
-							return e === 0;
-						}).length === 1){
-							var definiteRowCoord = actualSubSquares + colSegment.indexOf(0);
-							this.fillSquare(definiteRowCoord, definiteColCoord, value);
-							console.log('Added ' + value + ' to the board at ('+definiteColCoord+','+definiteRowCoord+') using AllButOne.');
-						}
+						var definiteRowCoord = actualSubSquares + colSegment.indexOf(0);
+						this.fillSquare(definiteRowCoord, definiteColCoord, value);
+						Sudoku.log('Added ' + value + ' to the board at ('+definiteColCoord+','+definiteRowCoord+') using AllButOne.');
 					}
 				}
-			},this);
+			}
 		},
 		eliminatePairs: function(){
+			Sudoku.log('*EliminatePairs*')
 			this.eliminateGroups(2);	
 		},
 		eliminateTriples: function(){
+			Sudoku.log('*EliminateTriples*');
 			this.eliminateGroups(3);	
 		},
 		eliminateGroups: function(length){
@@ -423,7 +460,7 @@
 										var result = true;
 										for(var i = 0; i < elem.length; i++){
 											if(elem[i] === e){
-												console.log('Eliminated ' + e + ' from ' + '(' + row + ',' + index + ')s possibility list in the knowledge base.');
+												Sudoku.log('Eliminated ' + e + ' from ' + '(' + row + ',' + index + ')s possibility list in the knowledge base.');
 												result = false;
 												break;
 											}
@@ -449,7 +486,7 @@
 										var result = true;
 										for(var i = 0; i < elem.length; i++){
 											if(elem[i] === e){
-												console.log('Eliminated ' + e + ' from ' + '(' + col + ',' + index + ')s possibility list in the knowledge base.');
+												Sudoku.log('Eliminated ' + e + ' from ' + '(' + col + ',' + index + ')s possibility list in the knowledge base.');
 												result = false;
 												break;
 											}
