@@ -1,5 +1,5 @@
 (function(){
-	function Solver(board, proc){
+	function Solver(board){
 		// Array of 2d, row-major arrays representing the 3x3 subSquares on the board.
 		this.subSquares = [];
 		this.proc = board.proc;
@@ -40,7 +40,11 @@
 		this.active = true;
 
 		this.accuracy = 0.9;
-		this.baseAccuracy = 0.3;
+		this.baseAccuracy = 0.9;
+
+		this.actionHistory = [];
+		this.maxHistoryLength = 20;
+		this.actionCounter = 0;
 
 		// Set up the internal representation.
 		if(this.board.ready){
@@ -81,6 +85,8 @@
 				this.eliminateTriples();
 				this.takeOpportunities(this.all[this.currentValueIdx]);;
 
+				this.rollBackActions();
+
 				if(!this.changedThisIteration){
 					this.noChangeCounter++;
 				}else{
@@ -99,6 +105,43 @@
 
 				this.currentValueIdx = (this.currentValueIdx + 1) % 9;
 				this.adjustAccuracy();
+			}
+		},
+		logAction: function(action){
+			this.actionCounter++;
+			if(this.actionHistory.length === this.maxHistoryLength){
+				this.actionHistory.shift();
+				this.actionHistory.push(action);
+			} else {
+				this.actionHistory.push(action);
+			}
+		},
+		constraintsMet: function(){
+				
+		},
+		// Returns true if the board is currently in a valid state (violating no constraints), false otherwise.
+		boardValid: function(){
+			return false;
+		},
+		rollBackActions: function(){
+			var lastAction;
+			while(this.actionHistory.length){
+				this.actionCounter--;
+				lastAction = this.actionHistory.pop();
+				switch(lastAction.type){
+					case "INVALID":
+						// There's been some erroneous action added. Terminate
+						this.active = false;
+						Sudoku.log("Invalid action added to history. Cannot revert.");
+						return;
+						break;
+					case "SQUARE_FILLED":
+						// Remove the value from the square specified
+						this.board.fillSquare(lastAction.row, lastAction.col, 0);
+						break;
+					default:
+						break;
+				}
 			}
 		},
 		adjustAccuracy: function(){	
@@ -233,6 +276,7 @@
 					if(this.checkKnowledge(row, col).length === 1 && this.internalRepr[row][col][0] === value){
 						this.fillSquare(row,col,value);
 						this.changedThisIteration = true;
+						this.logAction(new Sudoku.Action("SQUARE_FILLED",new Sudoku.SquareFillData(row, col, value)));
 						Sudoku.log('Added ' + value + ' to the board at ('+col+','+row+') by TakeOpportunities.');
 					}	
 				}

@@ -82,7 +82,10 @@
     Board.prototype = {
         // Fill in a square on the board. 
         fillSquare: function(row, col, val) {
-            if(this.data[row][col] === 0){
+            if(val === 0){
+              this.numFilled--;
+              this.data[row][col] = val;
+            }else if(this.data[row][col] === 0){
               this.numFilled++;
               this.data[row][col] = val;
             }
