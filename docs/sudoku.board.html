@@ -50,8 +50,10 @@
     <span class="kd">function</span> <span class="nx">Board</span><span class="p">(</span><span class="nx">defaultConfig</span><span class="p">,</span> <span class="nx">proc</span><span class="p">){</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">ready</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">proc</span> <span class="o">=</span> <span class="nx">proc</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">numFilled</span><span class="p">;</span>
         <span class="k">if</span><span class="p">(</span><span class="nx">defaultConfig</span> <span class="o">===</span> <span class="kc">true</span><span class="p">){</span>
-            <span class="k">this</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="nx">defaultEvilBoard</span><span class="p">;</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="nx">defaultVeryHardBoard</span><span class="p">;</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">computeFill</span><span class="p">();</span>
             <span class="k">this</span><span class="p">.</span><span class="nx">ready</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
         <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
             <span class="k">this</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
@@ -61,14 +63,29 @@
                         <span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
                     <span class="p">}</span>
             <span class="p">}</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">numFilled</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="p">}</span>
     <span class="p">}</span>
 
     <span class="nx">Board</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Fill in a square on the board. </p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">fillSquare</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">val</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="nx">val</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">===</span> <span class="mi">0</span><span class="p">){</span>
+              <span class="k">this</span><span class="p">.</span><span class="nx">numFilled</span><span class="o">++</span><span class="p">;</span>
+              <span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="nx">val</span><span class="p">;</span>
+            <span class="p">}</span>
             <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">ready</span><span class="p">){</span>
                 <span class="k">this</span><span class="p">.</span><span class="nx">ready</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
             <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="nx">computeFill</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+            <span class="kd">var</span> <span class="nx">numFilled</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">row</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">;</span> <span class="nx">row</span><span class="o">++</span><span class="p">){</span>
+              <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">col</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">;</span> <span class="nx">col</span><span class="o">++</span><span class="p">){</span>
+                <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]){</span>
+                  <span class="nx">numFilled</span><span class="o">++</span><span class="p">;</span>
+                <span class="p">}</span> 
+              <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">numFilled</span> <span class="o">=</span> <span class="nx">numFilled</span><span class="p">;</span>
         <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Parse a string of the form '.4.65..7.222.3 etc..' where a period indicates a blank square, numbers represent
 themselves in squares and the ordering is row-major. Assigns the result of parsing this string to this board's data.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">parseBoard</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">board</span><span class="p">){</span>
             <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="p">[];</span>
@@ -79,8 +96,9 @@ themselves in squares and the ordering is row-major. Assigns the result of parsi
             <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">rowStart</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">rowEnd</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span> <span class="nx">rowEnd</span> <span class="o">&lt;=</span> <span class="mi">81</span><span class="p">;</span> <span class="nx">rowStart</span> <span class="o">+=</span> <span class="mi">9</span><span class="p">,</span> <span class="nx">rowEnd</span> <span class="o">+=</span> <span class="mi">9</span><span class="p">){</span>
               <span class="nx">result</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">arr</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">rowStart</span><span class="p">,</span> <span class="nx">rowEnd</span><span class="p">));</span>
             <span class="p">}</span>
-            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+            <span class="nx">Sudoku</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Board parsed into: &#39;</span> <span class="o">+</span> <span class="nx">result</span><span class="p">);</span>
             <span class="k">this</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="nx">result</span><span class="p">;</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">computeFill</span><span class="p">();</span>
             <span class="k">this</span><span class="p">.</span><span class="nx">ready</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
         <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>Extracts a particular column (in the range of 0 to 8) from the board as an array.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">getColumn</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">col</span><span class="p">){</span>
             <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="p">[];</span>

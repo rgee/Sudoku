@@ -83,7 +83,7 @@ $(document).ready(function(){
         if(gameBoard.ready){
             setInterval(function(){
                 solver.solve();
-            }, 1000);
+            }, 100);
         }else{
             displayError("Game board not initialized. Enter at least one number.");
         }
@@ -95,7 +95,7 @@ $(document).ready(function(){
     procInstance.size(400,400);
     context = document.getElementById('board').getContext('2d');
 
-    gameBoard = new Sudoku.Board(true, procInstance);
+    gameBoard = new Sudoku.Board(false, procInstance);
     solver = new Sudoku.Solver(gameBoard);
     
 

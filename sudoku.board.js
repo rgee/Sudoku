@@ -62,8 +62,10 @@
     function Board(defaultConfig, proc){
         this.ready = false;
         this.proc = proc;
+        this.numFilled;
         if(defaultConfig === true){
             this.data = defaultVeryHardBoard;
+            this.computeFill();
             this.ready = true;
         } else {
             this.data = new Array(9);
@@ -73,16 +75,31 @@
                         this.data[i][j] = 0;
                     }
             }
+            this.numFilled = 0;
         }
     }
 
     Board.prototype = {
         // Fill in a square on the board. 
         fillSquare: function(row, col, val) {
-            this.data[row][col] = val;
+            if(this.data[row][col] === 0){
+              this.numFilled++;
+              this.data[row][col] = val;
+            }
             if(!this.ready){
                 this.ready = true;
             }
+        },
+        computeFill: function(){
+            var numFilled = 0;
+            for(var row = 0; row < 9; row++){
+              for(var col = 0; col < 9; col++){
+                if(this.data[row][col]){
+                  numFilled++;
+                } 
+              }
+            }
+            this.numFilled = numFilled;
         },
         // Parse a string of the form '.4.65..7.222.3 etc..' where a period indicates a blank square, numbers represent
         // themselves in squares and the ordering is row-major. Assigns the result of parsing this string to this board's data.
@@ -95,8 +112,9 @@
             for(var rowStart = 0, rowEnd = 9; rowEnd <= 81; rowStart += 9, rowEnd += 9){
               result.push(arr.slice(rowStart, rowEnd));
             }
-            console.log(result);
+            Sudoku.log('Board parsed into: ' + result);
             this.data = result;
+            this.computeFill();
             this.ready = true;
         },
         // Extracts a particular column (in the range of 0 to 8) from the board as an array.

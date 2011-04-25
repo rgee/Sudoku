@@ -34,16 +34,20 @@
 		this.noChangeCounter = 0;
 
 		// The maximum allowable number of consecutive times the solver can not modify the grid before giving up.
-		this.noChangeCutoff = 10;
+		this.noChangeCutoff = 50;
 
 		// Is the solver solving or not?
 		this.active = true;
+
+		this.accuracy = 0.9;
+		this.baseAccuracy = 0.3;
 
 		// Set up the internal representation.
 		if(this.board.ready){
 			this.processSubSquares();
 			this.calculatePotentials();
 		}
+		this.adjustAccuracy();
 
 	}
 
@@ -94,6 +98,29 @@
 				}
 
 				this.currentValueIdx = (this.currentValueIdx + 1) % 9;
+				this.adjustAccuracy();
+			}
+		},
+		adjustAccuracy: function(){	
+			this.accuracy = this.baseAccuracy + (this.board.numFilled / 81);
+
+		},
+		// Checks the knowledge base for a possibility list.
+		// This function does not always return a correct result. It has a 
+		// chance, based on the solver's accuracy to either return the correct result,
+		// return the result with an extra (valid) number added, or return the result
+		// with a random number removed.
+		checkKnowledge: function(row, col){
+			if(!this.madeMistake()){
+				return this.internalRepr[row][col];
+			} else {
+				var res = this.internalRepr[row][col];
+					res = res.slice(0,res.length);
+				if(Math.random() <= 0.5){
+					return res.push(Math.floor(Math.random() * 8 + 1));
+				}else{
+					return res.splice(Math.floor(Math.random() * res.length,1));
+				}
 			}
 		},
 
@@ -203,7 +230,7 @@
 			Sudoku.log('*TakeOpportunities*');
 			for(var col = 0; col < 9; col++){
 				for(var row = 0; row < 9; row++){
-					if(this.internalRepr[row][col].length === 1 && this.internalRepr[row][col][0] === value){
+					if(this.checkKnowledge(row, col).length === 1 && this.internalRepr[row][col][0] === value){
 						this.fillSquare(row,col,value);
 						this.changedThisIteration = true;
 						Sudoku.log('Added ' + value + ' to the board at ('+col+','+row+') by TakeOpportunities.');
@@ -306,6 +333,15 @@
 			},this);
 
 		},
+		madeMistake: function(){
+			var rand = Math.random();
+			if(rand <= this.accuracy){
+				return false;	
+			}else{
+				Sudoku.log('The solver made a mistake!! ('+this.accuracy+') ' + rand);
+				return true;
+			}
+		},
 		 // Taking each group of three columns or rows (non-overlapping), if a number appears in two of the three subsquares
 		 // the group covers, then we know what row or column that number must appear within the final subsquare that does
 		 // not have it. Using that, we see if the row or column, within the subgroup without that number only has one square
@@ -332,6 +368,10 @@
 				if(coords.filter(function(e){
 					return (e[1] === -1);
 				}).length === 1) {
+					// Inaccurate computation. We missed a few squares.
+					if(this.madeMistake()){
+						return;
+					}
 
 					// Grab the coordinate of the row without the value in it.
 					var definiteRowCoord = coords.filter(function(e){
@@ -360,6 +400,9 @@
 					if(rowSegment.filter(function(e){
 						return e === 0;
 					}).length === 1){
+						if(this.madeMistake()){
+							return;
+						}
 						var definiteColCoord = (actualSubSquares * 3) + rowSegment.indexOf(0);
 						this.fillSquare(definiteRowCoord, definiteColCoord,value);
 						this.changedThisIteration = true;

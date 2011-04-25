@@ -4,6 +4,9 @@ describe('solver', function(){
 
 		brd = new Sudoku.Board(true);
 		slv = new Sudoku.Solver(brd);
+
+		// Make sure our solver is never inaccurate for testing purposes.
+		slv.baseAccuracy = 99999;
 	});
 	describe('#getColumn', function(){
 		beforeEach(function(){
