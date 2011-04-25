@@ -34,17 +34,34 @@
 		this.noChangeCounter = 0;
 
 		// The maximum allowable number of consecutive times the solver can not modify the grid before giving up.
-		this.noChangeCutoff = 50;
+		this.noChangeCutoff = 10;
 
 		// Is the solver solving or not?
 		this.active = true;
 
+		// Chance certian calculations will succeed
 		this.accuracy = 0.9;
-		this.baseAccuracy = 0.9;
 
+		// A bare minimum for accuracy. I'm not that terrible!
+		this.baseAccuracy = 0.5;
+
+		// Stack of the last actions, the number of which determined by maxHistoryLength
 		this.actionHistory = [];
-		this.maxHistoryLength = 20;
+
+		// Number of moves to remember
+		this.maxHistoryLength = 5;
+
+		// Current number of actions taken on the grid
 		this.actionCounter = 0;
+	
+		// Number of backtrack attempts		
+		this.backtrackCounter = 0;
+
+		// Actions at which we began backtracking.
+		this.errorActionCounter = 0;
+
+		// Number of backtracks before we give up trying to correct mistakes.
+		this.frustrationWall = 3;
 
 		// Set up the internal representation.
 		if(this.board.ready){
@@ -85,7 +102,6 @@
 				this.eliminateTriples();
 				this.takeOpportunities(this.all[this.currentValueIdx]);;
 
-				this.rollBackActions();
 
 				if(!this.changedThisIteration){
 					this.noChangeCounter++;
@@ -93,8 +109,20 @@
 					this.noChangeCounter = 0;
 				}
 				if(this.noChangeCounter > this.noChangeCutoff){
-					this.active = false;
-					Sudoku.log('Went too long without modifying the grid. Stuck.');
+					this.errorActionCounter = this.actionCounter;
+					if(this.backtrackCounter < this.maxHistoryLength){
+						this.rollBackActions();
+						this.backtrackCounter++;
+					} else if(this.actionCounter > this.errorActionCounter){
+						this.backtrackCounter = 0;
+						this.noChangeCounter = 0;
+					} else if(this.backtrackCounter >= this.maxHistoryLength){
+						this.active = false;
+						Sudoku.log("Tried to correct mistakes, but failed.");
+					}else {
+						this.active = false;
+						Sudoku.log('Went too long without modifying the grid. Stuck.');
+					}
 				}
 
 				if(this.solved() && !this.solvedMessageDisplayed){
@@ -121,10 +149,10 @@
 		},
 		// Returns true if the board is currently in a valid state (violating no constraints), false otherwise.
 		boardValid: function(){
-			return false;
+
 		},
-		rollBackActions: function(){
-			var lastAction;
+		rollBackActions: function(howMany){
+			var lastAction, i = 0;
 			while(this.actionHistory.length){
 				this.actionCounter--;
 				lastAction = this.actionHistory.pop();
@@ -137,7 +165,7 @@
 						break;
 					case "SQUARE_FILLED":
 						// Remove the value from the square specified
-						this.board.fillSquare(lastAction.row, lastAction.col, 0);
+						this.board.fillSquare(lastAction.data.row, lastAction.data.col, 0);
 						break;
 					default:
 						break;
