@@ -97,20 +97,25 @@
 				this.processSubSquares();
 				this.calculatePotentials();
 
+				// Apply strategies
 				this.allButOne(this.all[this.currentValueIdx]);
 				this.eliminatePairs();
 				this.eliminateTriples();
-				this.takeOpportunities(this.all[this.currentValueIdx]);;
+				this.takeOpportunities(this.all[this.currentValueIdx]);
 
-
+				// If we made changes to the grid
 				if(!this.changedThisIteration){
 					this.noChangeCounter++;
 				}else{
 					this.noChangeCounter = 0;
 				}
+
+				// Have we gone too many iterations without changing the grid?
 				if(this.noChangeCounter > this.noChangeCutoff){
 					this.errorActionCounter = this.actionCounter;
-					if(this.backtrackCounter < this.maxHistoryLength){
+
+					// Do we still have the willpower to try again?
+					if(this.backtrackCounter < this.frustrationWall){
 						this.rollBackActions();
 						this.backtrackCounter++;
 					} else if(this.actionCounter > this.errorActionCounter){
@@ -124,7 +129,7 @@
 						Sudoku.log('Went too long without modifying the grid. Stuck.');
 					}
 				}
-
+				// We're done!
 				if(this.solved() && !this.solvedMessageDisplayed){
 					Sudoku.log('Puzzle solved.');
 					this.solvedMessageDisplayed = true;
@@ -135,6 +140,7 @@
 				this.adjustAccuracy();
 			}
 		},
+		// Stores an action in the solver's memory bank
 		logAction: function(action){
 			this.actionCounter++;
 			if(this.actionHistory.length === this.maxHistoryLength){
@@ -144,14 +150,8 @@
 				this.actionHistory.push(action);
 			}
 		},
-		constraintsMet: function(){
-				
-		},
-		// Returns true if the board is currently in a valid state (violating no constraints), false otherwise.
-		boardValid: function(){
-
-		},
-		rollBackActions: function(howMany){
+		// Undo every action in the action history. Used to try and correct mistakes.
+		rollBackActions: function(){
 			var lastAction, i = 0;
 			while(this.actionHistory.length){
 				this.actionCounter--;
@@ -283,12 +283,6 @@
 				
 			}
 		},
-
-		 // Analyze both the internal state and previous state and generate a summary of changes
-		 // in the form of an array of strings, each representing a single change.
-		summarizeChanges : function(){
-			
-		},
 		 // Fill in a square on the grid and update internal representations 
 		fillSquare : function(row, col, val){
 			this.board.fillSquare(row, col, val);
@@ -361,50 +355,7 @@
 				}
 			}
 		},
-
-		 // If a number is only a candidate in one row or column of a 3x3 subsquare, we can remove it as a candidate
-		 // from all cells in that particular row or column. It must appear in that particular subsquare or else
-		 // that subsquare would have no other way of filling the number.
-		onlyCandidate: function(){
-			var all = [1,2,3,4,5,6,7,8,9],
-				thisRow = [],
-				numOccurrences = 0,
-				location = 0;
-			all.forEach(function(number){
-
-
-				// Iterate through the potential 3d array by subsquare
-
-
-				// [0,1,2,3,4,5,6,7,8].forEach(function(row, index){
-				// 	thisRow = this.internalRepr[row];
-
-				// 	// Flatten the potential arrays in this row, and count number of appearances of the given number.
-				// 	numOccurrences = thisRow.reduce(function(a,b){
-				// 			return a.concat(b);
-				// 		})
-				// 		.map(function(e){
-				// 			return (a === number ? 1 : 0);	
-				// 		})
-				// 		.reduce(function(prev, curr){
-				// 			return prev + curr;
-				// 		});
-				// 	if(numOccurrences === 1){
-				// 		thisRow.forEach(function(e, index){
-				// 			if(e.indexOf(number) !== -1){
-				// 				location = index;
-				// 			}
-				// 		});
-				// 		thisRow.map(function(e, index){
-				// 			return (index === location ? e :
-				// 										 e.sli)
-				// 		})
-				// 	}
-
-				// },this);
-			},this);
-
-		},
+		// Check to see if the solver has just made a mistake. Returns true if it has, false otherwise.
 		madeMistake: function(){
 			var rand = Math.random();
 			if(rand <= this.accuracy){
@@ -533,15 +484,17 @@
 			Sudoku.log('*EliminateTriples*');
 			this.eliminateGroups(3);	
 		},
+		// If, along a row or a column, a length (either two or three) number of cells share a common, length
+		// long possibility list, then we know the values in the possibility list MUST be placed in those two
+		// cells, so we can remove them as possibilities from cells in that row or column.
 		eliminateGroups: function(length){
-
 			var elem = temp = removed = numMatches = null;
 			numMatches = 0;
 			for(var row = 0; row < 9; row++){
 				for(var col = 0; col < 9; col++){
 					elem = this.internalRepr[row][col].slice(0);
 					if(elem.length === length){
-						/* ****ROW CONSTRAINTS**** */
+						// ****ROW CONSTRAINTS**** 
 						// Make a copy of the array to mutate.
 						temp = this.internalRepr[row].slice(0);
 
@@ -587,7 +540,7 @@
 							});
 						}
 
-						/* ****COLUMN CONSTRAINTS**** */
+						// ****COLUMN CONSTRAINTS**** 
 						for(var i = 0; i < 9; i++){
 							if(elem.compareArrays(this.internalRepr[i][col]) && i !== row){
 								numMatches++;
