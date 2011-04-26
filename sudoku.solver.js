@@ -34,7 +34,7 @@
 		this.noChangeCounter = 0;
 
 		// The maximum allowable number of consecutive times the solver can not modify the grid before giving up.
-		this.noChangeCutoff = 10;
+		this.noChangeCutoff = 20;
 
 		// Is the solver solving or not?
 		this.active = true;
@@ -67,6 +67,7 @@
 		if(this.board.ready){
 			this.processSubSquares();
 			this.calculatePotentials();
+			this.startingFillRatio = this.board.numFilled / 81;
 		}
 		this.adjustAccuracy();
 
@@ -100,7 +101,9 @@
 				// Apply strategies
 				this.allButOne(this.all[this.currentValueIdx]);
 				this.eliminatePairs();
-				this.eliminateTriples();
+				if(this.startingFillRatio <= 0.2){
+					this.eliminateTriples();
+				}
 				this.takeOpportunities(this.all[this.currentValueIdx]);
 
 				// If we made changes to the grid
@@ -174,7 +177,7 @@
 			}
 		},
 		adjustAccuracy: function(){	
-			this.accuracy = this.baseAccuracy + (this.board.numFilled / 81);
+			this.accuracy = this.baseAccuracy + (this.board.numFilled / 81)*0.959
 
 		},
 		// Checks the knowledge base for a possibility list.
@@ -362,7 +365,7 @@
 			if(rand <= this.accuracy){
 				return false;	
 			}else{
-				Sudoku.log('The solver made a mistake!! ('+this.accuracy+') ' + rand);
+				Sudoku.log('The solver made a mistake!!');
 				return true;
 			}
 		},

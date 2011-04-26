@@ -64,7 +64,7 @@
         this.proc = proc;
         this.numFilled;
         if(defaultConfig === true){
-            this.data = defaultVeryHardBoard;
+            this.data = defaultEasyBoard;
             this.computeFill();
             this.ready = true;
         } else {
