@@ -67,6 +67,9 @@
 		if(this.board.ready){
 			this.processSubSquares();
 			this.calculatePotentials();
+
+			// Estimate the difficulty of the board. Not nearly comprehensive, but it's good
+			// enough...
 			this.startingFillRatio = this.board.numFilled / 81;
 		}
 		this.adjustAccuracy();
@@ -176,6 +179,8 @@
 				}
 			}
 		},
+		// Tweak the accuracy given a rough estimate of the amount of information we're keeping
+		// track of.
 		adjustAccuracy: function(){	
 			this.accuracy = this.baseAccuracy + (this.board.numFilled / 81)*0.959
 
