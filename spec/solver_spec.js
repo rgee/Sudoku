@@ -1,4 +1,4 @@
-describe('solver', function(){
+ describe('solver', function(){
 	var slv, brd;
 	beforeEach(function(){
 
@@ -74,12 +74,6 @@ describe('solver', function(){
 	describe('#subSquareIdx', function(){
 		it("correctly converts a row, column pair to a subSquare offset", function(){
 			expect(slv.subSquareIdx(2,2)).toEqual(0);
-		});
-	});
-	describe('#inverseSubSquareIdx', function(){
-		it("correctly converts an offset into a flattened version of the subSquare array to a row, col pair", function(){
-			var target = [2,2];
-			expect(slv.inverseSubSquareIdx(19)).toArrayEq([2,2]);
 		});
 	});
 	describe('#processSubSquares', function(){

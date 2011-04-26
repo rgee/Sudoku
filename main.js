@@ -64,7 +64,6 @@ $(document).ready(function(){
             var i = 0, j = 0, idx = 0;
             while(i < this.height && j < this.width){
                 if(!(idx % 3)){
-                    console.log(i);
                     this.strokeWeight(3);
                     this.line(0, i, this.width, i);
                     this.line(j, 0, j, this.height);
