@@ -43,7 +43,7 @@
 		this.accuracy = 0.9;
 
 		// A bare minimum for accuracy. I'm not that terrible!
-		this.baseAccuracy = 0.6;
+		this.baseAccuracy = 0.7;
 
 		// Stack of the last actions, the number of which determined by maxHistoryLength
 		this.actionHistory = [];

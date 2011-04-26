@@ -61,12 +61,22 @@ $(document).ready(function(){
             this.stroke = 0;
             this.rect(0, 0, this.width, this.height);
             
-            var i = 0, j = 0;
+            var i = 0, j = 0, idx = 0;
             while(i < this.height && j < this.width){
-                this.line(0, i, this.width, i);
-                this.line(j, 0, j, this.height);
+                if(!(idx % 3)){
+                    console.log(i);
+                    this.strokeWeight(3);
+                    this.line(0, i, this.width, i);
+                    this.line(j, 0, j, this.height);
+                    this.strokeWeight(1);
+                } else {
+                    this.line(0, i, this.width, i);
+                    this.line(j, 0, j, this.height);
+                }   
+
                 i += this.height / 9;
                 j += this.width / 9;
+                idx++;
             }
 
             this.drawText();
