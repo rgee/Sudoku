@@ -43,7 +43,7 @@
 		this.accuracy = 0.9;
 
 		// A bare minimum for accuracy. I'm not that terrible!
-		this.baseAccuracy = 0.5;
+		this.baseAccuracy = 0.6;
 
 		// Stack of the last actions, the number of which determined by maxHistoryLength
 		this.actionHistory = [];
@@ -152,6 +152,7 @@
 		},
 		// Undo every action in the action history. Used to try and correct mistakes.
 		rollBackActions: function(){
+			Sudoku.log("Backtracking...")
 			var lastAction, i = 0;
 			while(this.actionHistory.length){
 				this.actionCounter--;
